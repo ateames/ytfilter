@@ -867,6 +867,20 @@ button {
   cursor: default;
 }
 
+.admin-info-box {
+  margin: 0 0 var(--spacing-lg);
+  padding: var(--spacing-md);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  background-color: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.admin-info-box a {
+  color: var(--color-accent);
+}
+
 @media (max-width: 767px) {
   .site-header--admin .site-logo {
     display: block;
@@ -1056,4 +1070,26 @@ button {
   font-size: 1.5rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+}
+
+/* ------------------------------------------------------------------ */
+/* Site footer                                                      */
+/* ------------------------------------------------------------------ */
+
+.site-footer {
+  padding: var(--spacing-lg) var(--spacing-md);
+  text-align: center;
+  border-top: 1px solid var(--color-border);
+}
+
+.site-footer__link {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.site-footer__link:hover,
+.site-footer__link:focus {
+  color: var(--color-text);
 }

@@ -9,9 +9,9 @@
   <body>
     {% block header %}
     <header class="site-header">
-      <a href="/" class="site-logo">ytfilter</a>
+      <a href="{{ base_url }}" class="site-logo">▶ YouTube Home</a>
       <nav class="site-nav" aria-label="Main navigation">
-        <a href="/" class="site-nav__link{% if request.path == '/' %} is-active{% endif %}">Browse</a>
+        <a href="{{ base_url }}" class="site-nav__link{% if request.path == '/' %} is-active{% endif %}">Browse</a>
         <a href="/history" class="site-nav__link{% if request.path == '/history' %} is-active{% endif %}">History</a>
         <a href="/watchtime" class="site-nav__link{% if request.path == '/watchtime' %} is-active{% endif %}">Watch Time</a>
       </nav>
@@ -31,6 +31,10 @@
     <main class="main-content">
       {% block content %}{% endblock %}
     </main>
+
+    <footer class="site-footer">
+      <a href="/setup" class="site-footer__link">Setup on this device</a>
+    </footer>
 
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     {% block scripts %}{% endblock %}

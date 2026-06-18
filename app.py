@@ -22,6 +22,7 @@ from user_routes import (
 
 app = Flask(__name__)
 app.config.from_object(Config)
+app.jinja_env.globals["base_url"] = config.APP_BASE_URL
 app.register_blueprint(admin_bp, url_prefix="/api/admin")
 app.register_blueprint(user_bp, url_prefix="/api")
 
@@ -30,6 +31,18 @@ app.register_blueprint(user_bp, url_prefix="/api")
 def blocked():
     blocked_from = request.args.get("from", "")
     return render_template("blocked.html", blocked_from=blocked_from)
+
+
+@app.route("/setup")
+def setup():
+    ua = request.headers.get("User-Agent", "").lower()
+    if "iphone" in ua or "ipad" in ua:
+        device = "ios"
+    elif "android" in ua:
+        device = "android"
+    else:
+        device = "desktop"
+    return render_template("setup.html", device=device)
 
 
 @app.route("/")

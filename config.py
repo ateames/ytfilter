@@ -6,6 +6,7 @@ load_dotenv()
 
 HOST = os.getenv("HOST", "0.0.0.0")
 PORT = int(os.getenv("PORT", 80))
+APP_BASE_URL = os.getenv("APP_BASE_URL", "http://youtube.home")
 
 
 class Config:
