@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}{{ video.title }} — ytfilter{% endblock %}
+
+{% block content %}
+  <div class="watch-page">
+    <div class="player-wrap">
+      <div id="player" class="player-embed" aria-label="Video player"></div>
+      <div id="limit-overlay" class="limit-overlay hidden" role="alert">
+        <p class="limit-overlay__message">Daily limit reached</p>
+      </div>
+    </div>
+
+    <div id="min-watch-notice" class="min-watch-notice{% if player_config.minWatchTimeSeconds == 0 %} hidden{% endif %}">
+      <span id="min-watch-notice-text"></span>
+    </div>
+
+    <div class="watch-meta">
+      <h1 class="watch-title">{{ video.title }}</h1>
+      <p class="watch-channel">{{ video.channel_name or "Unknown channel" }}</p>
+    </div>
+
+    <div class="watch-actions">
+      <a
+        href="/"
+        id="back-btn"
+        class="btn back-btn{% if player_config.minWatchTimeSeconds > 0 %} is-locked{% endif %}"
+        {% if player_config.minWatchTimeSeconds > 0 %}
+          aria-disabled="true"
+          tabindex="-1"
+        {% endif %}
+      >
+        ← Back to browse
+      </a>
+      <p id="remaining-display" class="watch-remaining" aria-live="polite">
+        {% if player_config.unlimited %}
+          Unlimited watch time today
+        {% else %}
+          You have <span id="remaining-minutes">{{ (player_config.secondsRemaining // 60) }}</span> minutes remaining today
+        {% endif %}
+      </p>
+    </div>
+  </div>
+
+  <script id="player-config" type="application/json">{{ player_config | tojson }}</script>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{{ url_for('static', filename='js/player.js') }}"></script>
+{% endblock %}

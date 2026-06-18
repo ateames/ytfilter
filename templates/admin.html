@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Panel — ytfilter{% endblock %}
+
+{% block header %}
+  <header class="site-header site-header--admin">
+    <span class="site-logo">Admin Panel</span>
+  </header>
+{% endblock %}
+
+{% block content %}
+  <div id="admin-toast" class="admin-toast hidden" role="status" aria-live="polite"></div>
+
+  <section class="admin-section">
+    <h2 class="admin-section__title">Settings</h2>
+    <form class="admin-form" id="settings-form">
+      <div class="admin-form__field">
+        <label class="admin-form__label" for="min-video-length">Minimum video length (minutes)</label>
+        <input
+          class="admin-form__input"
+          type="number"
+          id="min-video-length"
+          name="min_video_length_minutes"
+          min="0"
+          step="1"
+          value="{{ settings.min_video_length_minutes }}"
+          required
+        />
+      </div>
+      <div class="admin-form__field">
+        <label class="admin-form__label" for="min-watch-time">Minimum watch time per video (minutes)</label>
+        <input
+          class="admin-form__input"
+          type="number"
+          id="min-watch-time"
+          name="min_watch_time_minutes"
+          min="0"
+          step="1"
+          value="{{ settings.min_watch_time_minutes }}"
+          required
+        />
+      </div>
+      <div class="admin-form__field">
+        <label class="admin-form__label" for="max-daily-watch">Daily watch limit (minutes, 0 = unlimited)</label>
+        <input
+          class="admin-form__input"
+          type="number"
+          id="max-daily-watch"
+          name="max_daily_watch_minutes"
+          min="0"
+          step="1"
+          value="{{ settings.max_daily_watch_minutes }}"
+          required
+        />
+      </div>
+      <button type="submit" class="btn btn-primary" id="save-settings-btn">Save Settings</button>
+    </form>
+  </section>
+
+  <section class="admin-section">
+    <h2 class="admin-section__title">Channels</h2>
+    <div class="admin-add-channel">
+      <input
+        class="admin-form__input admin-add-channel__input"
+        type="text"
+        id="channel-input"
+        placeholder="Channel ID (UC…) or YouTube channel URL"
+        autocomplete="off"
+      />
+      <button type="button" class="btn btn-primary" id="add-channel-btn">Add</button>
+    </div>
+    <ul class="admin-channel-list" id="channel-list" aria-live="polite">
+      <li class="admin-channel-list__loading">
+        <div class="spinner" aria-hidden="true"></div>
+        Loading channels…
+      </li>
+    </ul>
+  </section>
+
+  <section class="admin-section">
+    <h2 class="admin-section__title">Stats</h2>
+    <dl class="admin-stats" id="admin-stats">
+      <div class="admin-stats__item">
+        <dt class="admin-stats__label">Total videos cached</dt>
+        <dd class="admin-stats__value" id="stat-total-videos">—</dd>
+      </div>
+      <div class="admin-stats__item">
+        <dt class="admin-stats__label">Total channels</dt>
+        <dd class="admin-stats__value" id="stat-total-channels">—</dd>
+      </div>
+      <div class="admin-stats__item">
+        <dt class="admin-stats__label">Watch sessions today</dt>
+        <dd class="admin-stats__value" id="stat-sessions-today">—</dd>
+      </div>
+    </dl>
+  </section>
+
+  <!--
+    Raspberry Pi deployment:
+    How to run on Pi: gunicorn -w 2 -b 0.0.0.0:5000 app:app
+    Find Pi IP: hostname -I
+  -->
+{% endblock %}
+
+{% block scripts %}
+  <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+{% endblock %}

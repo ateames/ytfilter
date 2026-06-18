@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Today's Watch Time — ytfilter{% endblock %}
+
+{% block content %}
+  <header class="page-header">
+    <h1 class="page-title">Today's Watch Time</h1>
+  </header>
+
+  <section class="watchtime-panel" id="watchtime-panel" aria-live="polite">
+    <div class="empty-state">
+      <div class="spinner spinner--lg" aria-hidden="true"></div>
+    </div>
+  </section>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{{ url_for('static', filename='js/watchtime.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}ytfilter{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  </head>
+  <body>
+    {% block header %}
+    <header class="site-header">
+      <a href="/" class="site-logo">ytfilter</a>
+      <nav class="site-nav" aria-label="Main navigation">
+        <a href="/" class="site-nav__link{% if request.path == '/' %} is-active{% endif %}">Browse</a>
+        <a href="/history" class="site-nav__link{% if request.path == '/history' %} is-active{% endif %}">History</a>
+        <a href="/watchtime" class="site-nav__link{% if request.path == '/watchtime' %} is-active{% endif %}">Watch Time</a>
+      </nav>
+    </header>
+    {% endblock %}
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="flash-messages" role="status" aria-live="polite">
+          {% for message in messages %}
+            <p class="flash-message">{{ message }}</p>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <main class="main-content">
+      {% block content %}{% endblock %}
+    </main>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+  </body>
+</html>

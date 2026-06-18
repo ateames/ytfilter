@@ -1,0 +1,16 @@
+# To install: sudo cp ytfilter.service /etc/systemd/system/
+# Then run:  sudo systemctl enable ytfilter && sudo systemctl start ytfilter
+
+[Unit]
+Description=ytfilter YouTube Filter App
+After=network.target
+
+[Service]
+WorkingDirectory=/home/pi/ytfilter
+ExecStart=/usr/bin/python3 app.py
+Restart=always
+User=root
+Environment=PORT=80
+
+[Install]
+WantedBy=multi-user.target

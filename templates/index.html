@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Browse — ytfilter{% endblock %}
+
+{% block content %}
+  <header class="page-header">
+    <h1 class="page-title">Browse</h1>
+  </header>
+
+  <div class="channel-filter" id="channel-filter" role="toolbar" aria-label="Filter by channel">
+    <button type="button" class="channel-btn is-active" data-channel-id="">All</button>
+    {% for channel in channels %}
+      <button type="button" class="channel-btn" data-channel-id="{{ channel.channel_id }}">
+        {% if channel.thumbnail_url %}
+          <img
+            class="channel-btn__avatar"
+            src="{{ channel.thumbnail_url }}"
+            alt=""
+            width="24"
+            height="24"
+            loading="lazy"
+          />
+        {% endif %}
+        {{ channel.channel_name }}
+      </button>
+    {% endfor %}
+  </div>
+
+  <div class="search-bar">
+    <input
+      type="search"
+      class="search-input"
+      id="search-input"
+      placeholder="Search videos…"
+      autocomplete="off"
+      aria-label="Search videos"
+    />
+  </div>
+
+  <div class="video-grid" id="video-grid" aria-live="polite"></div>
+
+  <div class="load-more-wrap">
+    <button type="button" class="btn btn-primary hidden" id="load-more">Load more</button>
+  </div>
+{% endblock %}
