@@ -5,8 +5,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 HOST = os.getenv("HOST", "0.0.0.0")
-PORT = int(os.getenv("PORT", 80))
-APP_BASE_URL = os.getenv("APP_BASE_URL", "http://youtube.home")
+PORT = int(os.getenv("PORT", 5000))
+APP_BASE_URL = os.getenv("APP_BASE_URL", "https://youtube.home")
 
 
 class Config:

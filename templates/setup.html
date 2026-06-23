@@ -187,16 +187,16 @@
       <ol class="setup-steps">
         <li>Bookmark this page (Ctrl+D / Cmd+D)</li>
         <li>Or drag the address bar URL to your bookmarks bar</li>
-        <li>Consider setting http://youtube.home as your browser homepage</li>
+        <li>Consider setting {{ base_url }} as your browser homepage</li>
       </ol>
       {% endif %}
 
       <div class="setup-address">
         <p class="setup-address__label">
-          The address for this app is always: http://youtube.home
+          The address for this app is always: {{ base_url }}
         </p>
         <div class="setup-address__row">
-          <span class="setup-address__url" id="app-url">http://youtube.home</span>
+          <span class="setup-address__url" id="app-url">{{ base_url }}</span>
           <button type="button" class="setup-copy-btn" id="copy-btn">
             Copy to clipboard
           </button>
@@ -204,13 +204,13 @@
       </div>
 
       <p class="setup-footer">
-        <a href="http://youtube.home">Go to YouTube Home →</a>
+        <a href="{{ base_url }}">Go to YouTube Home →</a>
       </p>
     </main>
 
     <script>
       (function () {
-        const url = "http://youtube.home";
+        const url = {{ base_url | tojson }};
         const btn = document.getElementById("copy-btn");
 
         btn.addEventListener("click", async function () {
