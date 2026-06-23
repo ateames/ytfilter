@@ -14,11 +14,20 @@ Designed for households that want a controlled YouTube library—parents manage 
 - **Watch history** — Record and retrieve recent viewing sessions per user, with dedicated History and Watch Time pages.
 - **Browse UI** — Channel filter, search, and paginated video grid on the home page.
 - **Admin panel** — Web UI at `/admin` for managing settings, channels, and viewing usage stats.
+- **Block page** — `/blocked` landing page when visitors arrive via a `youtube.com` host header (used with Pi-hole DNS hijacking).
+- **Device setup guide** — `/setup` walks users through bookmarking or adding the app to their home screen.
+- **Home network deployment** — Optional Pi-hole DNS and nginx configs to serve the app at `https://youtube.home` and redirect `youtube.com` traffic.
 
 ## Requirements
 
 - Python 3.11+
 - A [YouTube Data API v3](https://developers.google.com/youtube/v3/getting-started) key (required for adding and refreshing channels)
+
+For a full home-network deployment (recommended on a Raspberry Pi):
+
+- [Pi-hole](https://pi-hole.net/) (or another DNS server using dnsmasq) to resolve local domain names to your host
+- [nginx](https://nginx.org/) to terminate TLS and reverse-proxy to Flask
+- A locally trusted TLS certificate (e.g. via [mkcert](https://github.com/FiloSottile/mkcert))
 
 ## Setup
 
@@ -49,8 +58,12 @@ Designed for households that want a controlled YouTube library—parents manage 
    | `YOUTUBE_API_KEY` | YouTube Data API key (required for adding/refreshing channels)              |
    | `SECRET_KEY`      | Flask session secret (change in production)                                 |
    | `ADMIN_TOKEN`     | Secret token for admin panel access and admin API requests                  |
+   | `HOST`            | Bind address (default: `0.0.0.0`)                                           |
    | `PORT`            | Server port (default: `5000`)                                               |
+   | `APP_BASE_URL`    | Public URL used for links in templates (default: `https://youtube.home`)    |
    | `FLASK_APP`       | Flask app module (default: `app.py`)                                        |
+
+   For local development, set `APP_BASE_URL=http://localhost:5000`.
 
    Generate `SECRET_KEY` and `ADMIN_TOKEN` in your terminal:
 
@@ -72,6 +85,12 @@ Designed for households that want a controlled YouTube library—parents manage 
    flask run --port 5000
    ```
 
+   Or use the helper script:
+
+   ```bash
+   ./run.sh
+   ```
+
    Open [http://localhost:5000](http://localhost:5000) in your browser.
 
 ## Admin panel
@@ -88,7 +107,7 @@ The admin panel is the primary way to configure ytfilter. It is not linked from 
    http://localhost:5000/admin?token=YOUR_ADMIN_TOKEN
    ```
 
-   Replace `YOUR_ADMIN_TOKEN` with the exact value from `.env`.
+   Replace `YOUR_ADMIN_TOKEN` with the exact value from `.env`. On a home-network deployment, use your `APP_BASE_URL` instead of `localhost`.
 
 4. **Bookmark this URL** for future visits. The token is read from the URL on each page load and sent as an `X-Admin-Token` header on admin API requests made by the panel.
 
@@ -116,39 +135,107 @@ Click **Save Settings** after changing values. Changing the minimum video length
 
 - Treat `ADMIN_TOKEN` like a password. Anyone with the token can change settings and manage channels.
 - The token appears in the admin URL and may be stored in browser history. Use a long, random value and avoid sharing the bookmarked link.
-- The admin panel is intended for trusted administrators on a private network. For production deployments, consider placing the app behind a reverse proxy with HTTPS.
+- The admin panel is intended for trusted administrators on a private network. Use HTTPS in production (see [Home network deployment](#home-network-deployment) below).
 
-### Production example
+## Home network deployment
 
-For a always-on host (e.g. a Raspberry Pi on your home network):
+For an always-on host (e.g. a Raspberry Pi), ytfilter is designed to run behind nginx with TLS, with Pi-hole handling local DNS.
 
-```bash
-gunicorn -w 2 -b 0.0.0.0:5000 app:app
+### Architecture
+
+```
+Client → Pi-hole DNS (youtube.home, youtube.com → Pi IP)
+       → nginx :443 (TLS termination)
+       → Flask :5000
 ```
 
-Then open `http://<host-ip>:5000/admin?token=YOUR_ADMIN_TOKEN` from a device on the same network.
+- **`youtube.home`** — friendly URL for the curated app (`APP_BASE_URL`)
+- **`youtube.com`** — nginx redirects to `https://youtube.home` (see `nginx/ytfilter.conf`)
+- Flask listens on port **5000** only; nginx binds ports 80 and 443
+
+### 1. Configure environment
+
+Set these in `.env` on the host:
+
+```env
+PORT=5000
+APP_BASE_URL=https://youtube.home
+```
+
+### 2. Run as a systemd service
+
+```bash
+sudo cp ytfilter.service /etc/systemd/system/
+# Edit WorkingDirectory in ytfilter.service if your install path differs
+sudo systemctl enable ytfilter
+sudo systemctl start ytfilter
+```
+
+### 3. Set up Pi-hole DNS
+
+Follow [pihole-config/INSTALL.md](pihole-config/INSTALL.md). Update `192.168.1.50` in `pihole-config/02-ytfilter-block.conf` to your host's static IP before copying it to Pi-hole.
+
+### 4. Set up nginx with HTTPS
+
+Follow [nginx/INSTALL.md](nginx/INSTALL.md). Generate TLS certificates for `youtube.com`, `www.youtube.com`, `m.youtube.com`, and `youtube.home`, then install the nginx site config.
+
+Install the CA certificate on every client device (phones, tablets, laptops) so browsers trust your local HTTPS cert.
+
+### 5. Verify
+
+```bash
+curl -k https://youtube.home -I
+curl -k https://youtube.com -I   # should 302 to https://youtube.home
+```
+
+Open `https://youtube.home` from a device on your network. The admin panel is at:
+
+```
+https://youtube.home/admin?token=YOUR_ADMIN_TOKEN
+```
+
+### Alternative: gunicorn
+
+For production without the built-in Flask server, you can use gunicorn instead:
+
+```bash
+gunicorn -w 2 -b 127.0.0.1:5000 app:app
+```
+
+Update `ytfilter.service` `ExecStart` accordingly. nginx still proxies to port 5000.
 
 ## Project structure
 
 ```
 ytfilter/
-├── app.py              # Flask app entry point and page routes
-├── config.py           # Environment-based configuration
-├── database.py         # SQLite schema and helpers
-├── youtube_service.py  # YouTube Data API client
-├── user_routes.py      # Public user API (/api)
-├── admin_routes.py     # Admin API (/api/admin)
+├── app.py                  # Flask app entry point and page routes
+├── config.py               # Environment-based configuration
+├── database.py             # SQLite schema and helpers
+├── youtube_service.py      # YouTube Data API client
+├── user_routes.py          # Public user API (/api)
+├── admin_routes.py         # Admin API (/api/admin)
+├── run.sh                  # Simple run script
+├── ytfilter.service        # systemd unit file
+├── nginx/
+│   ├── ytfilter.conf       # nginx reverse proxy + TLS config
+│   └── INSTALL.md
+├── pihole-config/
+│   ├── 02-ytfilter-block.conf
+│   └── INSTALL.md
 ├── templates/
-│   ├── admin.html      # Admin panel
+│   ├── admin.html          # Admin panel
 │   ├── access_denied.html
-│   ├── index.html      # Browse page
-│   ├── watch.html      # Video player
+│   ├── blocked.html        # YouTube block landing page
+│   ├── setup.html          # Device bookmark / home screen guide
+│   ├── index.html          # Browse page
+│   ├── watch.html          # Video player
 │   ├── history.html
-│   └── watchtime.html
+│   ├── watchtime.html
+│   └── base.html
 ├── static/
 │   ├── css/style.css
-│   └── js/             # admin.js, main.js, player.js, history.js, watchtime.js
-├── data/               # SQLite database (gitignored)
+│   └── js/                 # admin.js, main.js, player.js, history.js, watchtime.js
+├── data/                   # SQLite database (gitignored)
 └── requirements.txt
 ```
 
@@ -241,7 +328,15 @@ python youtube_service.py UC_x5XG1OV2P6uZZ5FSM9Ttw
 
 - The SQLite database is stored at `data/ytfilter.db` and is listed in `.gitignore`.
 - `apscheduler` is included in `requirements.txt` for future scheduled channel refreshes; it is not wired up yet.
-- Public pages: Browse (`/`), History (`/history`), Watch Time (`/watchtime`), and the video player (`/watch/<video_id>`).
+- `APP_BASE_URL` is exposed to all templates as `{{ base_url }}` for navigation and setup links.
+- Page routes:
+  - Browse (`/`)
+  - History (`/history`)
+  - Watch Time (`/watchtime`)
+  - Video player (`/watch/<video_id>`)
+  - Block page (`/blocked`)
+  - Device setup (`/setup`)
+  - Admin panel (`/admin?token=…`)
 
 ## License
 
